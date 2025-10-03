@@ -46,7 +46,6 @@ git push -u origin main
 ```
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
-NEXTAUTH_SECRET=un_secreto_aleatorio_seguro
 NEXT_PUBLIC_APP_URL=https://tu-dominio.vercel.app
 ```
 

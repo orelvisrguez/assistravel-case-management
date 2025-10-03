@@ -66,7 +66,6 @@ Editar `.env.local`:
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
-NEXTAUTH_SECRET=tu_secreto_nextauth
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
 
@@ -186,7 +185,6 @@ src/
 ```env
 NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase_produccion
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_produccion
-NEXTAUTH_SECRET=tu_secreto_nextauth_produccion
 NEXT_PUBLIC_APP_URL=https://tu-dominio.vercel.app
 ```
 
