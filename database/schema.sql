@@ -54,6 +54,30 @@ CREATE TABLE public.caso (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Script simplificado para evitar recursión en RLS
+
+-- Deshabilitar RLS temporalmente para configuración inicial
+ALTER TABLE public.usuarios DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.corresponsal DISABLE ROW LEVEL SECURITY;
+ALTER TABLE public.caso DISABLE ROW LEVEL SECURITY;
+
+-- Función auxiliar simplificada sin recursión
+CREATE OR REPLACE FUNCTION public.is_admin_user()
+RETURNS BOOLEAN AS $$
+BEGIN
+  -- Verificar directamente usando el ID del usuario autenticado
+  RETURN EXISTS (
+    SELECT 1 FROM public.usuarios 
+    WHERE id = auth.uid() AND rol = 'admin'
+  );
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Re-habilitar RLS
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.corresponsal ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.caso ENABLE ROW LEVEL SECURITY;
+
 -- Función para crear usuario automáticamente
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS TRIGGER AS $$
@@ -117,41 +141,25 @@ CREATE POLICY "Usuarios pueden ver su propio perfil" ON public.usuarios
 CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON public.usuarios
   FOR UPDATE USING (auth.uid() = id);
 
-CREATE POLICY "Solo admins pueden ver todos los usuarios" ON public.usuarios
-  FOR SELECT USING (
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+-- Políticas simplificadas para usuarios (solo perfil propio)
+CREATE POLICY "Usuarios pueden ver su propio perfil" ON public.usuarios
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Usuarios pueden actualizar su propio perfil" ON public.usuarios
+  FOR UPDATE USING (auth.uid() = id);
 
 -- Políticas para corresponsal
 CREATE POLICY "Usuarios autenticados pueden ver corresponsales" ON public.corresponsal
   FOR SELECT USING (auth.role() = 'authenticated');
 
 CREATE POLICY "Solo admins pueden crear corresponsales" ON public.corresponsal
-  FOR INSERT WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+  FOR INSERT WITH CHECK (public.is_admin_user());
 
 CREATE POLICY "Solo admins pueden actualizar corresponsales" ON public.corresponsal
-  FOR UPDATE USING (
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+  FOR UPDATE USING (public.is_admin_user());
 
 CREATE POLICY "Solo admins pueden eliminar corresponsales" ON public.corresponsal
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+  FOR DELETE USING (public.is_admin_user());
 
 -- Políticas para casos
 CREATE POLICY "Usuarios autenticados pueden ver casos" ON public.caso
@@ -162,20 +170,11 @@ CREATE POLICY "Usuarios autenticados pueden crear casos" ON public.caso
 
 CREATE POLICY "Usuarios pueden actualizar casos que crearon o admins" ON public.caso
   FOR UPDATE USING (
-    created_by = auth.uid() OR
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
+    created_by = auth.uid() OR public.is_admin_user()
   );
 
 CREATE POLICY "Solo admins pueden eliminar casos" ON public.caso
-  FOR DELETE USING (
-    EXISTS (
-      SELECT 1 FROM public.usuarios
-      WHERE id = auth.uid() AND rol = 'admin'
-    )
-  );
+  FOR DELETE USING (public.is_admin_user());
 
 -- Datos de ejemplo para corresponsales
 INSERT INTO public.corresponsal (nombre, contacto, email, telefonos, pagina_web, direccion, pais_sede) VALUES
