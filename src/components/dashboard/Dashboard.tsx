@@ -126,11 +126,9 @@ export default function Dashboard() {
                 />
                 <YAxis />
                 <Tooltip 
-                  formatter={[
-                    (value: number, name: string) => [
-                      name === 'total_casos' ? value : formatCurrency(value),
-                      name === 'total_casos' ? 'Casos' : 'Costo Total'
-                    ]
+                  formatter={(value: any, name: string) => [
+                    name === 'total_casos' ? value : formatCurrency(value as number),
+                    name === 'total_casos' ? 'Casos' : 'Costo Total'
                   ]}
                 />
                 <Bar dataKey="total_casos" fill="#3b82f6" radius={4} />
