@@ -21,33 +21,67 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signIn: async (email: string, password: string) => {
     set({ loading: true, error: null });
     try {
+      // Paso 1: Autenticación con Supabase Auth
       const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (authError) throw authError;
+      if (!authData.user) throw new Error('No se pudo obtener los datos del usuario');
 
-      // Obtener datos del usuario desde la tabla usuarios
+      // Paso 2: Intentar obtener datos del usuario desde la tabla usuarios
       const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', authData.user.id)
         .single();
 
-      if (userError) throw userError;
+      // Si no encuentra el usuario en la tabla, crear uno básico o usar datos de auth
+      if (userError || !userData) {
+        console.warn('Usuario no encontrado en tabla usuarios, usando datos de auth');
+        
+        // Intentar crear el usuario en la tabla usuarios
+        const { error: insertError } = await supabase
+          .from('usuarios')
+          .insert({
+            id: authData.user.id,
+            email: authData.user.email || email,
+            nombre: authData.user.user_metadata?.nombre || 'Usuario',
+            apellido: authData.user.user_metadata?.apellido || '',
+            rol: authData.user.user_metadata?.rol || 'user',
+          });
 
-      set({
-        user: {
-          id: userData.id,
-          email: userData.email,
-          nombre: userData.nombre,
-          apellido: userData.apellido,
-          role: userData.rol,
-        },
-        loading: false,
-      });
+        if (insertError) {
+          console.error('Error creando usuario en tabla:', insertError);
+        }
+
+        // Usar datos básicos del auth
+        set({
+          user: {
+            id: authData.user.id,
+            email: authData.user.email || email,
+            nombre: authData.user.user_metadata?.nombre || 'Usuario',
+            apellido: authData.user.user_metadata?.apellido || '',
+            role: authData.user.user_metadata?.rol || 'user',
+          },
+          loading: false,
+        });
+      } else {
+        // Usuario encontrado en la tabla
+        set({
+          user: {
+            id: userData.id,
+            email: userData.email,
+            nombre: userData.nombre,
+            apellido: userData.apellido,
+            role: userData.rol,
+          },
+          loading: false,
+        });
+      }
     } catch (error: any) {
+      console.error('Error en signIn:', error);
       set({ error: error.message, loading: false });
       throw error;
     }
@@ -96,7 +130,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Obtener datos del usuario desde la tabla usuarios
+        // Intentar obtener datos del usuario desde la tabla usuarios
         const { data: userData, error: userError } = await supabase
           .from('usuarios')
           .select('*')
@@ -112,13 +146,28 @@ export const useAuthStore = create<AuthState>((set, get) => ({
               apellido: userData.apellido,
               role: userData.rol,
             },
+            loading: false,
+          });
+        } else {
+          // Si no encuentra el usuario en la tabla, usar datos básicos de la sesión
+          console.warn('Usuario no encontrado en tabla usuarios durante checkAuth');
+          set({
+            user: {
+              id: session.user.id,
+              email: session.user.email || '',
+              nombre: session.user.user_metadata?.nombre || 'Usuario',
+              apellido: session.user.user_metadata?.apellido || '',
+              role: session.user.user_metadata?.rol || 'user',
+            },
+            loading: false,
           });
         }
+      } else {
+        set({ user: null, loading: false });
       }
     } catch (error: any) {
       console.error('Error checking auth:', error);
-    } finally {
-      set({ loading: false });
+      set({ user: null, loading: false });
     }
   },
 }));

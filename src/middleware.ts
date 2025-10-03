@@ -2,12 +2,15 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 
 export function middleware(request: NextRequest) {
-  // Obtener el token de autenticación de las cookies
-  const token = request.cookies.get('sb-access-token')?.value;
+  // Obtener el token de autenticación de las cookies de Supabase
+  const token = request.cookies.get('sb-access-token')?.value || 
+                request.cookies.get('supabase-auth-token')?.value ||
+                request.cookies.get('sb-zgpidurdqaxfwmbvuugq-auth-token')?.value;
+  
   const { pathname } = request.nextUrl;
 
   // Rutas públicas que no requieren autenticación
-  const publicRoutes = ['/auth/login', '/auth/register'];
+  const publicRoutes = ['/auth/login', '/auth/register', '/test-login'];
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route));
 
   // Si es una ruta pública y el usuario está autenticado, redirigir al dashboard

@@ -1,126 +1,188 @@
-# Instrucciones de Despliegue para ASSISTRAVEL
+# ASSISTRAVEL - Guía de Deployment
 
-## Configuración de Supabase
+Guía completa para el deployment de ASSISTRAVEL en Vercel.
 
-### 1. Crear Proyecto en Supabase
-1. Ve a [Supabase](https://supabase.com) y crea una cuenta
-2. Crea un nuevo proyecto
-3. Espera a que el proyecto se configure (puede tomar unos minutos)
+## 🚀 Deployment en Vercel
 
-### 2. Configurar Base de Datos
-1. Ve a SQL Editor en tu proyecto de Supabase
-2. Copia y pega el contenido del archivo `database/schema.sql`
-3. Ejecuta el script para crear las tablas y configuraciones
+### 1. **Preparación del proyecto**
 
-### 3. Obtener Credenciales
-1. Ve a Settings > API en tu proyecto de Supabase
-2. Copia:
-   - Project URL
-   - Project API anon key
-
-## Despliegue en Vercel
-
-### 1. Preparar el Repositorio
+Asegúrate de que tu proyecto esté listo:
 ```bash
-# Inicializar Git (si no está inicializado)
-git init
+# 1. Instalar dependencias
+npm install
 
-# Agregar archivos
-git add .
-
-# Commit inicial
-git commit -m "Initial commit: ASSISTRAVEL case management system"
-
-# Agregar repositorio remoto (reemplaza con tu URL)
-git remote add origin https://github.com/tu-usuario/assistravel-case-management.git
-
-# Push al repositorio
-git push -u origin main
-```
-
-### 2. Configurar Variables de Entorno en Vercel
-1. Ve a [Vercel](https://vercel.com) y crea una cuenta
-2. Importa tu repositorio de GitHub
-3. En la configuración del proyecto, agrega las siguientes variables de entorno:
-
-```
-NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_de_supabase
-NEXT_PUBLIC_APP_URL=https://tu-dominio.vercel.app
-```
-
-### 3. Desplegar
-1. Vercel detectará automáticamente que es un proyecto Next.js
-2. Haz clic en "Deploy"
-3. Espera a que el despliegue se complete
-
-## Configuración Post-Despliegue
-
-### 1. Crear Usuario Administrador
-1. Ve a tu aplicación desplegada
-2. Registra el primer usuario con rol "admin"
-3. Este será tu usuario administrador principal
-
-### 2. Configurar Corresponsales
-1. Inicia sesión como administrador
-2. Ve a la sección "Corresponsales"
-3. Agrega los corresponsales de tu empresa
-
-### 3. Configurar RLS (Row Level Security)
-Las políticas de seguridad ya están configuradas en el script SQL, pero verifica que estén activas:
-
-1. Ve a Authentication > Policies en Supabase
-2. Asegúrate de que todas las políticas estén habilitadas
-
-## URLs y Recursos
-
-- **Aplicación**: https://tu-dominio.vercel.app
-- **Supabase Dashboard**: https://app.supabase.com
-- **Vercel Dashboard**: https://vercel.com/dashboard
-
-## Comandos Útiles
-
-```bash
-# Desarrollo local
-npm run dev
-
-# Build de producción
+# 2. Verificar build local
 npm run build
 
-# Verificar tipos
+# 3. Verificar tipos
 npm run type-check
-
-# Linter
-npm run lint
 ```
 
-## Solución de Problemas
+### 2. **Configuración de variables de entorno**
 
-### Error de Autenticación
-- Verifica que las variables de entorno estén correctamente configuradas
-- Asegúrate de que la URL de la aplicación esté configurada en Supabase
+En Vercel Dashboard → Settings → Environment Variables, agrega:
 
-### Error de Base de Datos
-- Verifica que el script SQL se haya ejecutado correctamente
-- Revisa los logs en Supabase para errores específicos
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://zgpidurdqaxfwmbvuugq.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpncGlkdXJkcWF4ZndtYnZ1dWdxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MjA2NDAsImV4cCI6MjA3NTA5NjY0MH0.YLgfIVS3BlbGmhQqRSvDzd3I7CoUXM29bcRBsSyWx6g
+NEXT_PUBLIC_APP_URL=https://assistravel-case-management.vercel.app
+```
 
-### Error de Despliegue
-- Revisa los logs de build en Vercel
-- Asegúrate de que todas las dependencias estén en package.json
+**⚠️ IMPORTANTE:** 
+- No crear archivos `vercel.json` - Vercel detecta automáticamente Next.js
+- Usar las variables de entorno del dashboard, NO "Secrets"
 
-## Mantenimiento
+### 3. **Deployment automático**
 
-### Backup de Base de Datos
-1. Ve a Settings > Database en Supabase
-2. Programa backups automáticos
-3. Descarga backups manuales cuando sea necesario
+1. **Conectar repositorio:**
+   - Ve a [vercel.com](https://vercel.com)
+   - Click "Import Project"
+   - Conecta tu repositorio de GitHub
+   - Configura las variables de entorno
 
-### Monitoreo
-1. Configura alertas en Vercel para errores de aplicación
-2. Monitorea el uso de la base de datos en Supabase
-3. Revisa los logs regularmente
+2. **Deploy automático:**
+   - Cada push a `main` deployará automáticamente
+   - Cada PR tendrá un preview deployment
 
-### Actualizaciones
-1. Mantén las dependencias actualizadas
-2. Sigue las mejores prácticas de seguridad
-3. Realiza backups antes de actualizaciones importantes
+### 4. **Configuración de base de datos**
+
+En Supabase Dashboard:
+
+1. **Ejecutar schema:**
+   ```sql
+   -- Ejecutar en Supabase SQL Editor
+   -- Archivo: database/schema.sql
+   ```
+
+2. **Configurar RLS (Row Level Security):**
+   - Las políticas ya están incluidas en el schema
+   - Verificar que estén activas en Dashboard → Authentication → Policies
+
+3. **Crear usuario admin inicial:**
+   ```sql
+   -- Ejecutar después del primer registro
+   UPDATE public.usuarios 
+   SET rol = 'admin' 
+   WHERE email = 'tu-email@ejemplo.com';
+   ```
+
+### 5. **Verificación del deployment**
+
+Después del deployment, verifica:
+
+- ✅ **Login funciona:** `https://tu-dominio.vercel.app/auth/login`
+- ✅ **Dashboard carga:** `https://tu-dominio.vercel.app/dashboard`
+- ✅ **Variables de entorno:** En consola del navegador (F12)
+- ✅ **Base de datos:** Crear un caso de prueba
+
+### 6. **Dominios personalizados**
+
+Para usar tu propio dominio:
+
+1. **En Vercel Dashboard:**
+   - Settings → Domains
+   - Add Domain → `tu-dominio.com`
+
+2. **Actualizar DNS:**
+   - Crear CNAME: `tu-dominio.com` → `cname.vercel-dns.com`
+
+3. **Actualizar variable:**
+   ```env
+   NEXT_PUBLIC_APP_URL=https://tu-dominio.com
+   ```
+
+## 🔧 Configuraciones específicas
+
+### Next.js optimizaciones
+El proyecto está configurado para:
+- ✅ **Static optimization** automática
+- ✅ **Image optimization** con Next/Image
+- ✅ **Font optimization** con Next/Font
+- ✅ **Bundle analysis** con webpack
+
+### Supabase configuración
+- ✅ **Row Level Security** habilitado
+- ✅ **Auth policies** configuradas
+- ✅ **Real-time** deshabilitado (no necesario)
+- ✅ **JWT expiration** configurado
+
+## 🐛 Troubleshooting
+
+### Error común: Variables de entorno no funcionan
+**Solución:**
+1. Verificar que las variables estén en Vercel Dashboard
+2. NO usar archivo `vercel.json`
+3. Re-deploy después de cambiar variables
+
+### Error: "Function runtime must have a valid version"
+**Solución:**
+1. Eliminar cualquier archivo `vercel.json` del proyecto
+2. Dejar que Vercel detecte automáticamente Next.js
+
+### Error: "Infinite recursion detected in policy"
+**Solución:**
+1. Ejecutar script de corrección RLS en Supabase
+2. Ubicación: `database/debug-scripts/solucion-definitiva.sql`
+
+### Error: Auth no funciona en producción
+**Solución:**
+1. Verificar `NEXT_PUBLIC_APP_URL` apunte al dominio correcto
+2. Configurar redirect URLs en Supabase:
+   - Dashboard → Authentication → URL Configuration
+   - Site URL: `https://tu-dominio.vercel.app`
+   - Redirect URLs: `https://tu-dominio.vercel.app/**`
+
+## 📊 Monitoreo y logs
+
+### Vercel Analytics
+- Habilitado automáticamente
+- Ver métricas en Dashboard → Analytics
+
+### Logs de errores
+- **Frontend:** Browser Console (F12)
+- **Backend:** Vercel Dashboard → Functions → Logs
+- **Database:** Supabase Dashboard → Logs
+
+### Performance
+- **Core Web Vitals:** Vercel Analytics
+- **Database queries:** Supabase Dashboard → Performance
+
+## 🔄 CI/CD Pipeline
+
+El proyecto incluye:
+- ✅ **Auto-deployment** en cada push
+- ✅ **Preview deployments** para PRs
+- ✅ **Build optimization** automática
+- ✅ **Type checking** en build
+- ✅ **Linting** automático
+
+### Scripts de build
+```json
+{
+  "build": "next build",
+  "start": "next start",
+  "type-check": "tsc --noEmit"
+}
+```
+
+## 🚀 Optimizaciones de producción
+
+### Performance
+- ✅ **Image optimization** con Next/Image
+- ✅ **Font preloading** con Next/Font
+- ✅ **Code splitting** automático
+- ✅ **Tree shaking** habilitado
+
+### SEO
+- ✅ **Meta tags** configurados
+- ✅ **Sitemap** generado automáticamente
+- ✅ **Open Graph** configurado
+
+### Security
+- ✅ **HTTPS** forzado
+- ✅ **Security headers** configurados
+- ✅ **CSP** (Content Security Policy)
+
+---
+
+**ASSISTRAVEL** - Deployment profesional en Vercel 🚀
