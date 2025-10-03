@@ -1,0 +1,25 @@
+{
+  "name": "assistravel-case-management",
+  "version": "1.0.0",
+  "description": "Sistema de gestión de casos de asistencia en viajes para ASSISTRAVEL",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tu-usuario/assistravel-case-management.git"
+  },
+  "author": "MiniMax Agent",
+  "license": "MIT",
+  "keywords": [
+    "assistravel",
+    "case-management",
+    "travel-assistance",
+    "nextjs",
+    "supabase",
+    "typescript",
+    "tailwindcss"
+  ],
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}
